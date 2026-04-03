@@ -220,7 +220,7 @@ export default function HomePage(): React.JSX.Element {
             ))}
           </div>
           <div className="text-center">
-            <LinkButton href="/temoignages" variant="outline" size="lg">
+            <LinkButton href="/temoignage" variant="outline" size="lg">
               Voir tous les témoignages
             </LinkButton>
           </div>
