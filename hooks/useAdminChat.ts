@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 import {
   SENDER_ROLE,
   PRESENCE_STATUS,
   type AdminChatSession,
+  type ChatMessage,
 } from '@/types/chat';
 import {
   createAdminChannel,
@@ -17,35 +19,74 @@ import {
 } from '@/lib/chat';
 
 const TYPING_STOP_DELAY_MS = 2_500;
-const STORAGE_KEY = 'admin_chat_sessions';
 
-function loadSessions(): Map<string, AdminChatSession> {
-  if (globalThis.window === undefined) return new Map();
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return new Map();
-    const entries = JSON.parse(raw) as [string, AdminChatSession][];
-    return new Map(entries);
-  } catch {
+function getSupabase() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+
+async function fetchAllMessages(): Promise<Map<string, AdminChatSession>> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .select('*')
+    .order('timestamp', { ascending: true });
+
+  if (error || !data) {
+    console.error('[useAdminChat] Erreur chargement messages:', error);
     return new Map();
   }
-}
 
-function saveSessions(sessions: Map<string, AdminChatSession>): void {
-  if (globalThis.window === undefined) return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(sessions.entries())));
-  } catch {
+  const map = new Map<string, AdminChatSession>();
+  for (const row of data) {
+    const msg: ChatMessage = {
+      id: row.id,
+      sessionId: row.session_id,
+      text: row.text,
+      sender: row.sender,
+      timestamp: row.timestamp,
+    };
+
+    const existing = map.get(row.session_id);
+    // ✅ On reconstruit un nouvel objet au lieu de muter
+    map.set(row.session_id, {
+      sessionId: row.session_id,
+      messages: existing ? [...existing.messages, msg] : [msg],
+      isUserTyping: false,
+      lastActivity: row.timestamp, // le dernier row écrase, c'est correct car ORDER BY timestamp ASC
+    });
   }
+  return map;
 }
 
-export interface AdminChatState {
+async function persistMessage(message: ChatMessage): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase.from('chat_messages').insert({
+    id: message.id,
+    session_id: message.sessionId,
+    text: message.text,
+    sender: message.sender,
+    timestamp: message.timestamp,
+  });
+  if (error) console.error('[useAdminChat] Erreur persistance:', error);
+}
+
+async function deleteAllMessages(): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from('chat_messages')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+  if (error) console.error('[useAdminChat] Erreur suppression:', error);
+}
+
+export interface UseAdminChatReturn {
   readonly sessions: Map<string, AdminChatSession>;
   readonly activeSessionId: string | null;
   readonly isConnected: boolean;
-}
-
-export interface UseAdminChatReturn extends AdminChatState {
+  readonly isLoading: boolean;
   setActiveSession: (sessionId: string) => void;
   replyToSession: (sessionId: string, text: string) => Promise<void>;
   notifyTyping: (sessionId: string) => void;
@@ -53,9 +94,10 @@ export interface UseAdminChatReturn extends AdminChatState {
 }
 
 export function useAdminChat(): UseAdminChatReturn {
-  const [sessions, setSessions] = useState<Map<string, AdminChatSession>>(loadSessions);
+  const [sessions, setSessions] = useState<Map<string, AdminChatSession>>(new Map());
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const replyChannelsRef = useRef<Map<string, RealtimeChannel>>(new Map());
   const adminChannelRef = useRef<RealtimeChannel | null>(null);
@@ -73,31 +115,40 @@ export function useAdminChat(): UseAdminChatReturn {
           lastActivity: new Date().toISOString(),
         };
         next.set(sessionId, updater(existing));
-        saveSessions(next);
         return next;
       });
     },
     []
   );
 
-  const clearSessions = useCallback((): void => {
-    setSessions(new Map());
-    setActiveSessionId(null);
-    if (globalThis.window !== undefined) {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  }, []);
-
   const ensureReplyChannel = useCallback((sessionId: string): RealtimeChannel => {
     const existing = replyChannelsRef.current.get(sessionId);
     if (existing) return existing;
-
     const channel = createSessionChannel(sessionId);
     channel.subscribe();
     replyChannelsRef.current.set(sessionId, channel);
     return channel;
   }, []);
 
+  const clearSessions = useCallback((): void => {
+    deleteAllMessages().then(() => {
+      setSessions(new Map());
+      setActiveSessionId(null);
+    });
+  }, []);
+
+  // Chargement initial depuis Supabase
+  useEffect(() => {
+    fetchAllMessages().then(initialSessions => {
+      setSessions(initialSessions);
+      for (const sessionId of initialSessions.keys()) {
+        ensureReplyChannel(sessionId);
+      }
+      setIsLoading(false);
+    });
+  }, [ensureReplyChannel]);
+
+  // Écoute temps réel
   useEffect(() => {
     const adminChannel = createAdminChannel();
 
@@ -105,6 +156,7 @@ export function useAdminChat(): UseAdminChatReturn {
       onMessage(message) {
         if (message.sender === SENDER_ROLE.USER) {
           ensureReplyChannel(message.sessionId);
+          persistMessage(message).catch(console.error);
           upsertSession(message.sessionId, prev => ({
             ...prev,
             messages: [...prev.messages, message],
@@ -120,7 +172,7 @@ export function useAdminChat(): UseAdminChatReturn {
       },
     });
 
-    adminChannel.subscribe((status) => {
+    adminChannel.subscribe(status => {
       setIsConnected(status === 'SUBSCRIBED');
       if (status === 'SUBSCRIBED') {
         broadcastPresence(adminChannel, SENDER_ROLE.ADMIN, PRESENCE_STATUS.ONLINE).catch(console.error);
@@ -135,7 +187,7 @@ export function useAdminChat(): UseAdminChatReturn {
     return () => {
       broadcastPresence(adminChannel, SENDER_ROLE.ADMIN, PRESENCE_STATUS.OFFLINE).catch(console.error);
       typingTimeouts.forEach(clearTimeout);
-      replyChannels.forEach(channel => { channel.unsubscribe().catch(console.error); });
+      replyChannels.forEach(ch => { ch.unsubscribe().catch(console.error); });
       adminChannel.unsubscribe().catch(console.error);
     };
   }, [ensureReplyChannel, upsertSession]);
@@ -143,23 +195,15 @@ export function useAdminChat(): UseAdminChatReturn {
   const replyToSession = useCallback(
     async (sessionId: string, text: string): Promise<void> => {
       if (!text.trim()) return;
-
       const channel = ensureReplyChannel(sessionId);
 
       if (isTypingSentRef.current.get(sessionId)) {
         isTypingSentRef.current.set(sessionId, false);
-        await broadcastTyping(channel, {
-          sessionId,
-          sender: SENDER_ROLE.ADMIN,
-          isTyping: false,
-        });
+        await broadcastTyping(channel, { sessionId, sender: SENDER_ROLE.ADMIN, isTyping: false });
       }
 
-      const message = await broadcastMessage(channel, {
-        sessionId,
-        text,
-        sender: SENDER_ROLE.ADMIN,
-      });
+      const message = await broadcastMessage(channel, { sessionId, text, sender: SENDER_ROLE.ADMIN });
+      await persistMessage(message);
 
       upsertSession(sessionId, prev => ({
         ...prev,
@@ -177,11 +221,7 @@ export function useAdminChat(): UseAdminChatReturn {
       const sendTypingStop = async (): Promise<void> => {
         if (!isTypingSentRef.current.get(sessionId)) return;
         isTypingSentRef.current.set(sessionId, false);
-        await broadcastTyping(channel, {
-          sessionId,
-          sender: SENDER_ROLE.ADMIN,
-          isTyping: false,
-        });
+        await broadcastTyping(channel, { sessionId, sender: SENDER_ROLE.ADMIN, isTyping: false });
       };
 
       const existing = typingTimeoutsRef.current.get(sessionId);
@@ -189,11 +229,7 @@ export function useAdminChat(): UseAdminChatReturn {
 
       if (!isTypingSentRef.current.get(sessionId)) {
         isTypingSentRef.current.set(sessionId, true);
-        broadcastTyping(channel, {
-          sessionId,
-          sender: SENDER_ROLE.ADMIN,
-          isTyping: true,
-        }).catch(console.error);
+        broadcastTyping(channel, { sessionId, sender: SENDER_ROLE.ADMIN, isTyping: true }).catch(console.error);
       }
 
       typingTimeoutsRef.current.set(
@@ -208,6 +244,7 @@ export function useAdminChat(): UseAdminChatReturn {
     sessions,
     activeSessionId,
     isConnected,
+    isLoading,
     setActiveSession: setActiveSessionId,
     replyToSession,
     notifyTyping,

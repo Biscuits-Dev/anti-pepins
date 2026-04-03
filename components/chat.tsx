@@ -1,228 +1,151 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useChat } from '@/hooks/useChat';
-import type { ChatMessage } from '@/types/chat';
-import { SENDER_ROLE } from '@/types/chat';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-interface MessageBubbleProps {
-  readonly message: ChatMessage;
-}
-
-function MessageBubble({ message }: MessageBubbleProps) {
-  const isUser = message.sender === SENDER_ROLE.USER;
-  const time = new Date(message.timestamp).toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
-  return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={`max-w-xs px-4 py-2 rounded-2xl ${
-          isUser
-            ? 'bg-emerald-600 text-white rounded-br-sm'
-            : 'bg-slate-100 text-slate-900 rounded-bl-sm'
-        }`}
-      >
-        <p className="text-sm leading-relaxed">{message.text}</p>
-        <p className={`text-xs mt-1 ${isUser ? 'text-emerald-200' : 'text-slate-400'}`}>
-          {time}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function TypingIndicator() {
-  return (
-    <div className="flex justify-start">
-      <div className="bg-slate-100 px-4 py-3 rounded-2xl rounded-bl-sm">
-        <div className="flex gap-1 items-center">
-          {[0, 150, 300].map((delay) => (
-            <span
-              key={delay}
-              className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-              style={{ animationDelay: `${delay}ms` }}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-interface AdminBadgeProps {
-  readonly isOnline: boolean;
-}
-
-function AdminBadge({ isOnline }: AdminBadgeProps) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <span
-        className={`w-2 h-2 rounded-full ${
-          isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-slate-300'
-        }`}
-      />
-      <span className="text-xs text-slate-500">
-        {isOnline ? 'Un bénévole est disponible' : 'Laissez votre message'}
-      </span>
-    </div>
-  );
-}
-
-// ─── Main widget ──────────────────────────────────────────────────────────────
-
-export function ChatWidget() {
+export function ChatWidget(): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState('');
+  const [message, setMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { messages, isAdminTyping, isAdminOnline, isConnected, sendMessage, notifyTyping } =
-    useChat();
+  const {
+    messages,
+    isAdminTyping,
+    isAdminOnline,
+    isConnected,
+    sendMessage,
+    notifyTyping,
+  } = useChat();
 
-  // ── Auto-scroll ──────────────────────────────────────────────────────────
+  const toggleChat = () => setIsOpen(!isOpen);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+
+    await sendMessage(message);
+    setMessage('');
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage(e.target.value);
+    notifyTyping();
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isAdminTyping]);
-
-  // ── Handlers ─────────────────────────────────────────────────────────────
-
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-      e.preventDefault();
-      const trimmed = inputValue.trim();
-      if (!trimmed || !isConnected) return;
-
-      setInputValue('');
-      await sendMessage(trimmed);
-    },
-    [inputValue, isConnected, sendMessage]
-  );
-
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>): void => {
-      setInputValue(e.target.value);
-      notifyTyping();
-    },
-    [notifyTyping]
-  );
-
-  const toggleOpen = useCallback(() => setIsOpen(prev => !prev), []);
-  const close = useCallback(() => setIsOpen(false), []);
-
-  // ── Render ────────────────────────────────────────────────────────────────
+  }, [messages]);
 
   return (
     <>
-      {/* Toggle button */}
+      {/* Chat button */}
       <button
-        type="button"
-        onClick={toggleOpen}
+        onClick={toggleChat}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all z-40"
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat'}
-        aria-expanded={isOpen}
-        className="fixed bottom-6 right-6 w-16 h-16 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-all duration-200 flex items-center justify-center z-50"
       >
-        <span className="text-2xl select-none" aria-hidden="true">
-          {isOpen ? '✕' : '💬'}
-        </span>
+        <span className="text-2xl">💬</span>
+        {isAdminOnline && (
+          <span className="absolute top-1 right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse" />
+        )}
       </button>
 
-      {/* Chat panel — <dialog> pour l'accessibilité */}
-      <dialog
-        aria-label="Chat d'assistance"
-        open={isOpen}
-        className={`fixed bottom-24 right-6 w-96 bg-white border border-slate-200 rounded-2xl shadow-xl transition-all duration-300 z-40 m-0 p-0 ${
-          isOpen
-            ? 'translate-y-0 opacity-100 pointer-events-auto'
-            : 'translate-y-4 opacity-0 pointer-events-none'
-        }`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50 rounded-t-2xl">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-emerald-100 rounded-full flex items-center justify-center text-lg select-none">
-              🤝
-            </div>
-            <div>
-              <h2 className="font-semibold text-slate-900 text-sm">Assistance Anti Pépins</h2>
-              <AdminBadge isOnline={isAdminOnline} />
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Fermer le chat"
-            className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100"
+      {/* Chat widget */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-24 right-6 w-80 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden z-40"
           >
-            <span aria-hidden="true">✕</span>
-          </button>
-        </div>
+            <div className="flex flex-col h-96 max-h-[60vh]">
+              {/* Header */}
+              <div className="bg-emerald-600 text-white px-4 py-3 flex justify-between items-center">
+                <h3 className="font-semibold text-sm">Chat Anti Pepins</h3>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+                  <button
+                    onClick={toggleChat}
+                    className="text-white hover:text-emerald-100 transition-colors"
+                    aria-label="Fermer le chat"
+                  >
+                    <span className="text-lg">×</span>
+                  </button>
+                </div>
+              </div>
 
-        {/* Messages */}
-        <div
-          role="log"
-          aria-live="polite"
-          aria-label="Messages du chat"
-          className="h-80 overflow-y-auto px-4 py-3 space-y-3 bg-white"
-        >
-          {messages.length === 0 && (
-            <p className="text-center text-slate-400 text-sm pt-8">
-              Bonjour 👋 Un bénévole vous répondra dès que possible.
-            </p>
-          )}
+              {/* Messages */}
+              <div className="flex-1 p-4 overflow-y-auto space-y-3">
+                {messages.length === 0 ? (
+                  <div className="text-center text-slate-400 text-sm py-8">
+                    <p>Envoyez un message pour démarrer la conversation ! Un bénévole vas vous répondre dans les meilleurs délais.</p>
+                  </div>
+                ) : (
+                  messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.sender === 'admin' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
+                        msg.sender === 'admin'
+                          ? 'bg-emerald-100 text-emerald-900 rounded-br-sm'
+                          : 'bg-slate-100 text-slate-900 rounded-bl-sm'
+                      }`}>
+                        <p>{msg.text}</p>
+                        <p className={`text-xs mt-1 ${
+                          msg.sender === 'admin' ? 'text-emerald-600' : 'text-slate-400'
+                        }`}>
+                          {new Date(msg.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+                {isAdminTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-slate-100 px-3 py-2 rounded-lg rounded-bl-sm">
+                      <div className="flex gap-1 items-center">
+                        {[0, 150, 300].map(delay => (
+                          <span
+                            key={delay}
+                            className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"
+                            style={{ animationDelay: `${delay}ms` }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
 
-          {messages.map((message) => (
-            <MessageBubble key={message.id} message={message} />
-          ))}
-
-          {isAdminTyping && <TypingIndicator />}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input */}
-        <div className="px-4 py-3 border-t border-slate-100 bg-white rounded-b-2xl">
-          <form onSubmit={handleSubmit} className="flex gap-2" noValidate>
-            <input
-              type="text"
-              value={inputValue}
-              onChange={handleInputChange}
-              placeholder={isConnected ? 'Tapez votre message…' : 'Connexion en cours…'}
-              disabled={!isConnected}
-              maxLength={1000}
-              autoComplete="off"
-              aria-label="Message"
-              className="flex-1 px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-slate-900 text-sm placeholder:text-slate-400 disabled:bg-slate-50 disabled:cursor-not-allowed transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={!inputValue.trim() || !isConnected}
-              aria-label="Envoyer"
-              className="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <span aria-hidden="true">➤</span>
-            </button>
-          </form>
-          <p className="text-xs text-slate-400 mt-2 text-center">
-            La conversation est effacée à la fermeture de la page
-          </p>
-        </div>
-      </dialog>
-
-      {/* Backdrop */}
-      {isOpen && (
-        <button
-          type="button"
-          className="fixed inset-0 bg-transparent z-30"
-          onClick={close}
-          aria-label="Fermer le chat"
-          tabIndex={-1}
-        />
-      )}
+              {/* Input */}
+              <form onSubmit={handleSubmit} className="border-t border-slate-100 p-3">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={message}
+                    onChange={handleInputChange}
+                    placeholder="Votre message..."
+                    className="flex-1 px-3 py-2 border text-gray-900 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                    disabled={!isConnected}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!message.trim() || !isConnected}
+                    className="px-4 pl-2 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Envoyer
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

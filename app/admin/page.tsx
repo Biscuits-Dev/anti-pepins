@@ -407,13 +407,13 @@ export default function AdminPage() {
                   maxLength={2000}
                   rows={2}
                   aria-label="Réponse"
-                  className="flex-1 px-3 py-2 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-slate-900 text-sm placeholder:text-slate-400 transition-colors"
+                  className="flex-1 px-3 py-2 border  border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-slate-900 text-sm placeholder:text-slate-400 transition-colors"
                 />
                 <button
                   type="submit"
                   disabled={!replyValue.trim()}
                   aria-label="Envoyer la réponse"
-                  className="px-5 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors self-end"
+                  className="px-5 py-2 bg-emerald-600 text-white text-gray-800 rounded-xl hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors self-end"
                 >
                   Envoyer
                 </button>
