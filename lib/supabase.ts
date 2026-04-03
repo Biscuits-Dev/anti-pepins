@@ -1,7 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
-export const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+export const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient<Database>(supabaseUrl, supabaseAnonKey)
+  : {
+      auth: {},
+      from: () => ({ select: () => [], insert: () => [], update: () => [], delete: () => [] }),
+      channel: () => {
+        const channel = {
+          subscribe: () => channel,
+          send: () => true,
+          on: () => channel
+        };
+        return channel;
+      }
+    } as unknown as ReturnType<typeof createClient<Database>>;

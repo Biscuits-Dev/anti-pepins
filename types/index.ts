@@ -22,8 +22,6 @@ export type AsyncResult<T> = {
   refetch: () => Promise<void>;
 };
 
-// ─── Type Guards (primitive) ──────────────────────────────────────────────────
-
 export function isDefined<T>(value: T | undefined | null): value is T {
   return value !== undefined && value !== null;
 }
@@ -51,8 +49,6 @@ export function isNumber(value: unknown): value is number {
 export function isBoolean(value: unknown): value is boolean {
   return typeof value === "boolean";
 }
-
-// ─── Scam / Database Types ────────────────────────────────────────────────────
 
 export const SCAM_TYPES = [
   "phishing",
@@ -127,8 +123,6 @@ export interface ScamFilter {
   dateTo?: string;
 }
 
-// ─── Report Types ─────────────────────────────────────────────────────────────
-
 export const LOSS_STATUSES = ["yes", "no", "attempted"] as const;
 export type LossStatus = (typeof LOSS_STATUSES)[number];
 
@@ -163,8 +157,6 @@ export interface ReportSubmission {
   readonly message?: string;
 }
 
-// ─── Blog Types ───────────────────────────────────────────────────────────────
-
 export interface Article {
   readonly id: string;
   readonly title: string;
@@ -192,8 +184,6 @@ export interface Category {
   readonly count: number;
 }
 
-// ─── Contact Types ────────────────────────────────────────────────────────────
-
 export interface ContactFormValues {
   readonly name: string;
   readonly email: string;
@@ -216,8 +206,6 @@ export interface ContactMethod {
   readonly href: string;
 }
 
-// ─── Team / About Types ───────────────────────────────────────────────────────
-
 export interface TeamMember {
   readonly name: string;
   readonly role: string;
@@ -231,8 +219,6 @@ export interface SiteValue {
   readonly description: string;
   readonly icon?: string;
 }
-
-// ─── UI Types ─────────────────────────────────────────────────────────────────
 
 export interface PaginationInfo {
   readonly currentPage: number;
@@ -267,8 +253,6 @@ export interface SelectOption {
   readonly label: string;
 }
 
-// ─── SEO ──────────────────────────────────────────────────────────────────────
-
 export interface SeoMetadata {
   readonly title: string;
   readonly description: string;
@@ -279,8 +263,6 @@ export interface SeoMetadata {
   readonly canonical?: string;
   readonly robots?: string;
 }
-
-// ─── API Response ─────────────────────────────────────────────────────────────
 
 export interface ApiResponse<T> {
   readonly success: boolean;
@@ -312,8 +294,6 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// ─── Error Types ──────────────────────────────────────────────────────────────
-
 export class ApiError extends Error {
   override readonly name = "ApiError" as const;
 
@@ -343,8 +323,6 @@ export interface ValidationResult<T = Record<string, unknown>> {
   readonly data?: T;
 }
 
-// ─── Sanity CMS Types ─────────────────────────────────────────────────────────
-
 export interface SanityImageAsset {
   readonly url: string;
   readonly metadata?: Record<string, unknown>;
@@ -371,8 +349,6 @@ export interface Homepage {
     readonly buttonLink?: string;
   };
 }
-
-// ─── Validation Rule ──────────────────────────────────────────────────────────
 
 export type ValidationRule = {
   readonly type: string;

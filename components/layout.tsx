@@ -7,8 +7,6 @@ import Image from 'next/image';
 import { LinkButton } from '@/components/ui';
 import { ChatWidget } from '@/components/chat';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export interface HeaderProps {
   readonly logoText?: string;
 }
@@ -25,13 +23,12 @@ interface StatItem {
 }
 
 export interface SectionHeaderProps {
-  readonly id?: string;           // ← prop id ajoutée pour l'accessibilité aria-labelledby
+  readonly id?: string;
   readonly title: string;
   readonly subtitle?: string;
   readonly align?: 'left' | 'center';
 }
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
 
 const NAV_LINKS: readonly NavLink[] = [
   { href: '/',         label: 'Accueil' },
@@ -47,7 +44,6 @@ const FOOTER_NAV = {
   main: [
     { name: 'Accueil',              href: '/' },
     { name: 'Signaler une arnaque', href: '/report' },
-    { name: 'Base publique',        href: '/database' },
     { name: 'Blog',                 href: '/blog' },
   ],
   legal: [
@@ -64,8 +60,6 @@ const FOOTER_NAV = {
 
 const GITHUB_REPO_URL = 'https://github.com/Biscuits-Dev/';
 const BISCUITS_IA_URL = 'http://biscuits-ia.com/';
-
-// ─── Header ───────────────────────────────────────────────────────────────────
 
 export function Header({ logoText = 'Anti Pepins' }: HeaderProps): React.JSX.Element {
   const pathname = usePathname();
@@ -160,8 +154,6 @@ export function Header({ logoText = 'Anti Pepins' }: HeaderProps): React.JSX.Ele
   );
 }
 
-// ─── Footer ───────────────────────────────────────────────────────────────────
-
 export function Footer({ logoText = 'Anti Pepins' }: HeaderProps): React.JSX.Element {
   const currentYear = new Date().getFullYear();
 
@@ -242,8 +234,6 @@ export function Footer({ logoText = 'Anti Pepins' }: HeaderProps): React.JSX.Ele
   );
 }
 
-// ─── MainLayout ───────────────────────────────────────────────────────────────
-
 interface MainLayoutProps {
   readonly children: React.ReactNode;
 }
@@ -258,8 +248,6 @@ export function MainLayout({ children }: MainLayoutProps): React.JSX.Element {
     </div>
   );
 }
-
-// ─── SectionHeader ────────────────────────────────────────────────────────────
 
 export function SectionHeader({
   id,
@@ -285,8 +273,6 @@ export function SectionHeader({
     </div>
   );
 }
-
-// ─── StatsSection ─────────────────────────────────────────────────────────────
 
 interface StatsSectionProps {
   readonly stats: readonly StatItem[];

@@ -1,5 +1,4 @@
 export class AppError extends Error {
-  // Not `as const` on base so subclasses can widen it
   declare readonly name: string;
 
   constructor(message: string) {
@@ -77,8 +76,6 @@ export class NetworkError extends AppError {
   }
 }
 
-// ─── Type Guards ─────────────────────────────────────────────────────────────
-
 export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
 }
@@ -114,8 +111,6 @@ export function isRetryableError(error: unknown): boolean {
   return error instanceof ServerError;
 }
 
-// ─── Error Formatter ─────────────────────────────────────────────────────────
-
 export function formatError(error: unknown): string {
   if (error instanceof ValidationError) return `Validation — ${error.field}: ${error.message}`;
   if (error instanceof NotFoundError)   return `Not found: ${error.message}`;
@@ -126,8 +121,6 @@ export function formatError(error: unknown): string {
   if (error instanceof Error)           return `${error.name}: ${error.message}`;
   return "An unknown error occurred";
 }
-
-// ─── Error Logger ─────────────────────────────────────────────────────────────
 
 type ErrorContext = Record<string, unknown>;
 
@@ -144,17 +137,13 @@ export function logError(error: unknown, context?: ErrorContext): void {
 
   console.error("[ERROR]", JSON.stringify(entry, null, 2));
 
-  // Sentry integration — tree-shaken in dev
   if (process.env.NODE_ENV === "production") {
-    // Lazily access Sentry so the bundle doesn't break if it isn't installed
     const sentry = (globalThis as Record<string, unknown>)["Sentry"] as
       | { captureException?: (e: unknown, ctx?: unknown) => void }
       | undefined;
     sentry?.captureException?.(error, { extra: entry });
   }
 }
-
-// ─── Safe Async Wrapper ───────────────────────────────────────────────────────
 
 type AnyAsyncFn = (...args: never[]) => Promise<unknown>;
 
@@ -173,8 +162,6 @@ export function withErrorHandling<T extends AnyAsyncFn>(
   };
 }
 
-// ─── Validation Error Helpers ─────────────────────────────────────────────────
-
 export function createValidationErrors(
   errors: Record<string, string>
 ): ValidationError[] {
@@ -192,9 +179,6 @@ export function getFirstValidationError(
 export function hasValidationErrors(errors: ValidationError[]): boolean {
   return errors.length > 0;
 }
-
-// ─── Error Boundary Types ─────────────────────────────────────────────────────
-// Import React only for the type — no runtime cost.
 
 import type React from "react";
 
