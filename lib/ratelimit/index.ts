@@ -51,8 +51,15 @@ export async function checkRateLimit(
     return { allowed: true, remaining: max - 1, resetAt: Date.now() + windowMs };
   }
 
-  const { success, remaining, reset } = await getLimiter(max, windowMs).limit(key);
-  return { allowed: success, remaining, resetAt: reset };
+  try {
+    const { success, remaining, reset } = await getLimiter(max, windowMs).limit(key);
+    return { allowed: success, remaining, resetAt: reset };
+  } catch (err) {
+    // Upstash indisponible ou token sans permissions EVALSHA → on laisse passer
+    // plutôt que de crasher toutes les routes. Logguer pour investiguer.
+    console.error('[Ratelimit] Upstash error, fallback allow-all:', err);
+    return { allowed: true, remaining: max - 1, resetAt: Date.now() + windowMs };
+  }
 }
 
 export function getClientIp(request: Request): string {
