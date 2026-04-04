@@ -52,7 +52,9 @@ function AdminLoginContent({
 }>) {
   const searchParams = useSearchParams();
 
-  const redirectTo = searchParams.get('next') ?? '/admin';
+  const rawRedirect = searchParams.get('next') ?? '/admin';
+  // Prevent open redirect: only allow relative paths starting with /
+  const redirectTo = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/admin';
   const authError = searchParams.get('error');
 
   const handleChange = useCallback(
@@ -94,8 +96,8 @@ function AdminLoginContent({
         return;
       }
 
-      // Vérification du rôle côté client avant redirection
-      const role = data.user?.user_metadata?.role;
+      // Vérification du rôle via app_metadata (non modifiable par l'utilisateur)
+      const role = data.user?.app_metadata?.role;
       if (role !== 'admin') {
         await supabase.auth.signOut();
         setStatus('error');

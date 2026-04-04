@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Section, CallToAction, FAQItem, SearchBar } from '@/components/ui';
+import { Header } from '@/components/layout';
 
 interface FaqEntry {
   readonly question: string;
@@ -23,13 +24,13 @@ const FAQ_DATA: readonly FaqCategory[] = [
           <>
             <p className="mb-2">
               Rendez-vous sur la page{' '}
-              <a href="/report" className="text-blue-600 hover:underline">Signalement</a>{' '}
+              <a href="/report" className="text-emerald-600 hover:underline">Signalement</a>{' '}
               et remplissez le formulaire avec&nbsp;:
             </p>
             <ul className="list-disc pl-6 mb-2">
               <li>Un titre descriptif</li>
               <li>Une description détaillée</li>
-              <li>Des preuves (captures d&apos;écran, emails, etc.)</li>
+              <li>Des preuves (captures d&#39;écran, emails, etc.)</li>
             </ul>
             <p>Votre signalement sera traité sous 48h par notre équipe de modération.</p>
           </>
@@ -42,72 +43,8 @@ const FAQ_DATA: readonly FaqCategory[] = [
             <p className="mb-2">Oui, nous respectons le RGPD et chiffrons toutes les données sensibles.</p>
             <p>
               Consultez notre{' '}
-              <a href="/rgpd" className="text-blue-600 hover:underline">politique de confidentialité</a>{' '}
-              pour plus d&apos;informations.
-            </p>
-          </>
-        ),
-      },
-      {
-        question: 'Puis-je signaler anonymement ?',
-        answer: (
-          <p>
-            Oui, vous pouvez signaler sans créer de compte. Seules les informations
-            nécessaires au traitement du signalement sont requises.
-          </p>
-        ),
-      },
-    ],
-  },
-  {
-    category: 'Compte et Données',
-    items: [
-      {
-        question: 'Comment créer un compte ?',
-        answer: (
-          <p>
-            Cliquez sur &quot;Connexion&quot; en haut à droite, puis sur &quot;S&apos;inscrire&quot;.
-            Vous pouvez utiliser votre email ou un compte Google/GitHub.
-          </p>
-        ),
-      },
-      {
-        question: "J'ai oublié mon mot de passe",
-        answer: (
-          <p>
-            Utilisez le lien &quot;Mot de passe oublié&quot; sur la page de connexion. Un email
-            vous sera envoyé pour réinitialiser votre mot de passe.
-          </p>
-        ),
-      },
-      {
-        question: 'Comment supprimer mon compte ?',
-        answer: (
-          <>
-            <p className="mb-2">Vous pouvez supprimer votre compte dans les paramètres de votre profil.</p>
-            <p>Toutes vos données personnelles seront effacées conformément au RGPD.</p>
-          </>
-        ),
-      },
-    ],
-  },
-  {
-    category: 'Contribution',
-    items: [
-      {
-        question: 'Comment aider sans coder ?',
-        answer: (
-          <>
-            <p className="mb-2">Il existe plusieurs façons de contribuer&nbsp;:</p>
-            <ul className="list-disc pl-6 mb-2">
-              <li>Devenir modérateur bénévole</li>
-              <li>Rédiger des guides et tutoriels</li>
-              <li>Partager la plateforme sur les réseaux sociaux</li>
-              <li>Signaler des arnaques</li>
-            </ul>
-            <p>
-              Consultez notre{' '}
-              <a href="/contribuer" className="text-blue-600 hover:underline">page Contribuer</a>.
+              <a href="/rgpd" className="text-emerald-600 hover:underline">politique de confidentialité</a>{' '}
+              pour plus d&#39;informations.
             </p>
           </>
         ),
@@ -118,11 +55,11 @@ const FAQ_DATA: readonly FaqCategory[] = [
           <>
             <p className="mb-2">
               Envoyez un email à{' '}
-              <a href="mailto:contact@anti-pepins.biscuits-ia.com" className="text-blue-600 hover:underline">
-                contact@anti-pepins.biscuits-ia.com
+              <a href="mailto:contact@biscuits-ia.com" className="text-emerald-600 hover:underline">
+                contact@biscuits-ia.com
               </a>{' '}
               avec&nbsp;:
-            </p>
+       </p>
             <ul className="list-disc pl-6 mb-2">
               <li>Votre expérience en modération</li>
               <li>Votre motivation</li>
@@ -136,9 +73,9 @@ const FAQ_DATA: readonly FaqCategory[] = [
         question: 'Comment signaler un problème sur la plateforme ?',
         answer: (
           <p>
-            Utilisez le bouton &quot;Feedback&quot; en bas de page ou envoyez un email à{' '}
-            <a href="mailto:contact@anti-pepins.biscuits-ia.com" className="text-blue-600 hover:underline">
-              contact@anti-pepins.biscuits-ia.com
+            Utilisez le bouton en bas de page ou envoyez un email à{' '}
+              <a href="mailto:contact@biscuits-ia.com" className="text-emerald-600 hover:underline">
+              contact@biscuits-ia.com
             </a>.
           </p>
         ),
@@ -154,7 +91,7 @@ const FAQ_DATA: readonly FaqCategory[] = [
           <p>
             Les signalements publiés sur Anti-Pépins sont des informations publiques destinées
             à informer. Ils ne constituent pas des preuves juridiques. Pour une procédure
-            judiciaire, il faut obtenir des preuves officielles (plainte, constats d&apos;huissier, etc.).
+            judiciaire, il faut obtenir des preuves officielles (plainte, constats d&#39;huissier, etc.).
           </p>
         ),
       },
@@ -172,9 +109,9 @@ const FAQ_DATA: readonly FaqCategory[] = [
         answer: (
           <>
             <p className="mb-2">
-              Contactez-nous immédiatement à{' '}
-              <a href="mailto:contact@anti-pepins.biscuits-ia.com" className="text-blue-600 hover:underline">
-                contact@anti-pepins.biscuits-ia.com
+              Contactez-nous immédiatement à&nbsp;
+              <a href="mailto:contact@biscuits-ia.com" className="text-emerald-600 hover:underline">
+                contact@biscuits-ia.com
               </a>.
             </p>
             <p>
@@ -203,12 +140,15 @@ export default function FAQPage(): React.JSX.Element {
   );
 
   return (
+    
+    <div className="min-h-screen flex flex-col bg-white">
+      <Header />
     <main className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Foire Aux Questions</h1>
-      <p className="mb-8 text-gray-700">
-        Trouvez des réponses aux questions fréquentes sur le fonctionnement d&apos;Anti-Pépins.
-        Si vous ne trouvez pas votre réponse, n&apos;hésitez pas à nous contacter.
-      </p>
+      <h1 className="text-3xl text-center font-bold mb-6">Foire Aux Questions</h1>
+       <p className="mb-8 text-center text-slate-600">
+         Trouvez des réponses aux questions fréquentes sur le fonctionnement d&apos;Anti-Pépins.
+         Si vous ne trouvez pas votre réponse, n&apos;hésitez pas à nous contacter.
+       </p>
 
       <SearchBar
         value={searchTerm}
@@ -229,17 +169,18 @@ export default function FAQPage(): React.JSX.Element {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">Aucun résultat pour cette catégorie.</p>
+            <p className="text-slate-500">Aucun résultat pour cette catégorie.</p>
           )}
         </Section>
       ))}
 
       <CallToAction
-        href="mailto:contact@anti-pepins.biscuits-ia.com"
+        href="mailto:contact@biscuits-ia.com"
         text="Poser une question non répertoriée"
       />
-      
-      <p className="text-sm text-gray-500 mt-8">Dernière mise à jour&nbsp;: 31 mars 2026</p>
+
+      <p className="text-sm text-slate-500 mt-8">Dernière mise à jour&nbsp;: 31 mars 2026</p>
     </main>
+  </div>
   );
 }

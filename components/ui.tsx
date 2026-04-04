@@ -19,8 +19,8 @@ interface SectionProps {
 export function Section({ title, children, className = '' }: SectionProps): React.JSX.Element {
   return (
     <section className={`mb-8 ${className}`}>
-      <h2 className="text-2xl font-bold mb-4 text-gray-900">{title}</h2>
-      <div className="text-gray-700">{children}</div>
+      <h2 className="text-2xl font-bold mb-4 text-slate-900">{title}</h2>
+      <div className="text-slate-700">{children}</div>
     </section>
   );
 }
@@ -39,7 +39,7 @@ export function CallToAction({ href, text, className = '' }: CallToActionProps):
     <div className={`mt-8 mb-8 ${className}`}>
       <a
         href={href}
-        className="inline-block bg-blue-600 text-white px-6 py-3  -lg hover:bg-blue-700 transition-colors font-medium"
+        className="inline-block bg-emerald-600 text-white px-6 py-3  -lg hover:bg-emerald-700 transition-colors font-medium border-[3px] border-slate-300 shadow-[4px_4px_0_0_#d1d5db] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#d1d5db]"
         target={isMailto ? undefined : '_blank'}
         rel={isMailto ? undefined : 'noopener noreferrer'}
       >
@@ -78,16 +78,16 @@ export function FAQItem({ question, answer, defaultOpen = false }: FAQItemProps)
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-b border-gray-200 py-4">
+    <div className="border-b border-slate-200 py-4">
       <button
-        className="w-full text-left font-semibold text-gray-900 flex justify-between items-center hover:text-blue-600 transition-colors"
+        className="w-full text-left font-semibold text-slate-900 flex justify-between items-center hover:text-emerald-600 transition-colors"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
       >
         {question}
         <span className="text-xl font-light" aria-hidden="true">{isOpen ? '−' : '+'}</span>
       </button>
-      {isOpen && <div className="mt-2 text-gray-600">{answer}</div>}
+      {isOpen && <div className="mt-2 text-slate-600">{answer}</div>}
     </div>
   );
 }
@@ -108,7 +108,7 @@ export function SearchBar({ value, onChange, placeholder = 'Rechercher...' }: Se
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-4 py-2 border border-gray-300  -lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="w-full px-4 py-2 border-[3px] border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 shadow-[2px_2px_0_0_#d1d5db]"
       />
     </div>
   );
@@ -124,7 +124,7 @@ interface TechBadgeProps {
 
 export function TechBadge({ name, color = 'bg-blue-100', textColor = 'text-blue-800' }: TechBadgeProps): React.JSX.Element {
   return (
-    <span className={`inline-block px-3 py-1 border-2 border-slate-900 shadow-[2px_2px_0_0_#171717] text-sm font-bold uppercase tracking-wide ${color} ${textColor}`}>
+    <span className={`inline-block px-3 py-1 border-2 border-slate-300 shadow-[2px_2px_0_0_#d1d5db] text-sm font-bold uppercase tracking-wide ${color} ${textColor}`}>
       {name}
     </span>
   );
@@ -144,9 +144,9 @@ interface ButtonProps {
 }
 
 const BUTTON_VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary:   'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500 border-[3px] border-slate-900 shadow-[4px_4px_0_0_#171717] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#171717] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
-  secondary: 'bg-slate-200 text-slate-800 hover:bg-slate-300 focus:ring-slate-400 border-[3px] border-slate-900 shadow-[4px_4px_0_0_#171717] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#171717] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
-  outline:   'border-[3px] border-emerald-600 text-emerald-600 hover:bg-emerald-50 focus:ring-emerald-500 shadow-[4px_4px_0_0_#171717] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#171717] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
+  primary:   'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500 border-[3px] border-slate-300 shadow-[4px_4px_0_0_#d1d5db] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#d1d5db] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
+  secondary: 'bg-slate-200 text-slate-800 hover:bg-slate-300 focus:ring-slate-400 border-[3px] border-slate-300 shadow-[4px_4px_0_0_#d1d5db] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#d1d5db] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
+  outline:   'border-[3px] border-emerald-600 text-emerald-600 hover:bg-emerald-50 focus:ring-emerald-500 shadow-[4px_4px_0_0_#d1d5db] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#d1d5db] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
   ghost:     'text-emerald-600 hover:bg-emerald-50 focus:ring-emerald-500 font-bold uppercase tracking-wide',
 };
 
@@ -239,8 +239,8 @@ export function Input({
       aria-describedby={ariaDescribedby}
       aria-invalid={hasError || undefined}
       className={[
-        'w-full px-3 py-2 border-[3px] focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 shadow-[2px_2px_0_0_#171717]',
-        hasError ? 'border-red-500' : 'border-slate-900',
+        'w-full px-3 py-2 border-[3px] focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 shadow-[2px_2px_0_0_#d1d5db]',
+        hasError ? 'border-red-500' : 'border-slate-300',
         className,
       ].join(' ')}
     />
@@ -283,8 +283,8 @@ export function TextArea({
       aria-describedby={ariaDescribedby}
       aria-invalid={hasError || undefined}
       className={[
-        'w-full px-3 py-2 border-[3px] focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 shadow-[2px_2px_0_0_#171717]',
-        hasError ? 'border-red-500' : 'border-slate-900',
+        'w-full px-3 py-2 border-[3px] focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 shadow-[2px_2px_0_0_#d1d5db]',
+        hasError ? 'border-red-500' : 'border-slate-300',
         className,
       ].join(' ')}
     />
@@ -325,8 +325,8 @@ export function Select({
       required={required}
       aria-invalid={hasError || undefined}
       className={[
-        'w-full px-3 py-2 border-[3px] focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white shadow-[2px_2px_0_0_#171717]',
-        hasError ? 'border-red-500' : 'border-slate-900',
+        'w-full px-3 py-2 border-[3px] focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white shadow-[2px_2px_0_0_#d1d5db]',
+        hasError ? 'border-red-500' : 'border-slate-300',
         className,
       ].join(' ')}
     >
@@ -366,7 +366,7 @@ export function Checkbox({
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         required={required}
-        className="h-5 w-5 mt-0.5 text-emerald-600 focus:ring-emerald-500 border-slate-900 border-2 shrink-0 shadow-[2px_2px_0_0_#171717]"
+        className="h-5 w-5 mt-0.5 text-emerald-600 focus:ring-emerald-500 border-slate-300 border-2 shrink-0 shadow-[2px_2px_0_0_#d1d5db]"
       />
       <span className="text-sm text-slate-700">{label}</span>
     </label>
@@ -384,9 +384,9 @@ interface LinkButtonProps {
 }
 
 const LINK_VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary:   'bg-emerald-600 text-white hover:bg-emerald-700 border-[3px] border-slate-900 shadow-[4px_4px_0_0_#171717] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#171717] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
-  secondary: 'bg-slate-200 text-slate-800 hover:bg-slate-300 border-[3px] border-slate-900 shadow-[4px_4px_0_0_#171717] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#171717] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
-  outline:   'border-[3px] border-emerald-600 text-emerald-600 hover:bg-emerald-50 shadow-[4px_4px_0_0_#171717] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#171717] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
+  primary:   'bg-emerald-600 text-white hover:bg-emerald-700 border-[3px] border-slate-300 shadow-[4px_4px_0_0_#d1d5db] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#d1d5db] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
+  secondary: 'bg-slate-200 text-slate-800 hover:bg-slate-300 border-[3px] border-slate-300 shadow-[4px_4px_0_0_#d1d5db] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#d1d5db] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
+  outline:   'border-[3px] border-emerald-600 text-emerald-600 hover:bg-emerald-50 shadow-[4px_4px_0_0_#d1d5db] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#d1d5db] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-bold uppercase tracking-wide',
   ghost:     'text-emerald-600 hover:bg-emerald-50 font-bold uppercase tracking-wide',
 };
 

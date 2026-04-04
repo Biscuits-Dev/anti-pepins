@@ -1,25 +1,15 @@
 @import "tailwindcss";
 
+/* Force light mode for Anti-Pépins theme */
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  
+  --neo-shadow-color: #d1d5db;
+  --neo-border-color: #d1d5db;
   --neo-border-width: 3px;
   --neo-shadow-offset: 4px;
-  --neo-shadow-color: #171717;
-  --neo-border-color: #171717;
   --neo-emerald-shadow: #059669;
   --neo-emerald-border: #047857;
-}
-
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --neo-shadow-color: #000000;
-    --neo-border-color: #333333;
-  }
 }
 
 body {

@@ -22,7 +22,13 @@ function useCookieConsent() {
     if (stored == null) {
       setVisible(true);
     } else {
-      setStatus(JSON.parse(stored).status as ConsentStatus);
+      try {
+        const parsed = JSON.parse(stored);
+        setStatus(parsed.status as ConsentStatus);
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+        setVisible(true);
+      }
     }
   }, []);
 

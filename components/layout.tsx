@@ -53,20 +53,20 @@ const FOOTER_NAV = {
     { name: 'CGU',              href: '/cgu' },
   ],
   community: [
-    { name: 'Biscuits IA',  href: 'http://biscuits-ia.com/' },
+    { name: 'Biscuits IA',  href: 'https://biscuits-ia.com/' },
     { name: 'GitHub',  href: 'https://github.com/Biscuits-Dev/' }
   ],
 } as const;
 
 const GITHUB_REPO_URL = 'https://github.com/Biscuits-Dev/';
-const BISCUITS_IA_URL = 'http://biscuits-ia.com/';
+const BISCUITS_IA_URL = 'https://biscuits-ia.com/';
 
 export function Header({ logoText = 'Anti Pepins' }: HeaderProps): React.JSX.Element {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white border-b-4 border-slate-900 sticky top-0 z-50 shadow-[0_4px_0_0_#171717]">
+      <header className="bg-white border-b-4 border-slate-300 sticky top-0 z-50 shadow-[0_4px_0_0_#d1d5db]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
 
@@ -89,8 +89,8 @@ export function Header({ logoText = 'Anti Pepins' }: HeaderProps): React.JSX.Ele
                   className={[
                     'px-3 py-2 text-sm font-bold uppercase tracking-wide transition-all border-2 border-transparent',
                     isActive
-                      ? 'bg-emerald-50 text-emerald-700 border-slate-900 shadow-[2px_2px_0_0_#171717]'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-900 hover:shadow-[2px_2px_0_0_#171717] hover:translate-x-[-1px] hover:translate-y-[-1px]',
+                      ? 'bg-emerald-50 text-emerald-700 border-slate-300 shadow-[2px_2px_0_0_#d1d5db]'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 hover:shadow-[2px_2px_0_0_#d1d5db] hover:translate-x-[-1px] hover:translate-y-[-1px]',
                   ].join(' ')}
                 >
                   {link.label}
@@ -108,7 +108,7 @@ export function Header({ logoText = 'Anti Pepins' }: HeaderProps): React.JSX.Ele
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 border-2 border-slate-900 shadow-[2px_2px_0_0_#171717] text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="md:hidden p-2 border-2 border-slate-300 shadow-[2px_2px_0_0_#d1d5db] text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-expanded={isMenuOpen}
             aria-controls="mobile-menu"
@@ -121,7 +121,7 @@ export function Header({ logoText = 'Anti Pepins' }: HeaderProps): React.JSX.Ele
 
       {/* Mobile Navigation */}
       {isMenuOpen && (
-        <nav id="mobile-menu" className="md:hidden border-t-4 border-slate-900 bg-white shadow-[0_4px_0_0_#171717]" aria-label="Navigation mobile">
+        <nav id="mobile-menu" className="md:hidden border-t-4 border-slate-300 bg-white shadow-[0_4px_0_0_#d1d5db]" aria-label="Navigation mobile">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {NAV_LINKS.map((link) => {
               const isActive = pathname === link.href;
@@ -133,8 +133,8 @@ export function Header({ logoText = 'Anti Pepins' }: HeaderProps): React.JSX.Ele
                   className={[
                     'block px-3 py-2 border-2 border-transparent text-base font-bold uppercase tracking-wide',
                     isActive
-                      ? 'bg-emerald-50 text-emerald-700 border-slate-900 shadow-[2px_2px_0_0_#171717]'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-900 hover:shadow-[2px_2px_0_0_#171717]',
+                      ? 'bg-emerald-50 text-emerald-700 border-slate-300 shadow-[2px_2px_0_0_#d1d5db]'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 hover:shadow-[2px_2px_0_0_#d1d5db]',
                   ].join(' ')}
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -158,7 +158,7 @@ export function Footer({ logoText = 'Anti Pepins' }: HeaderProps): React.JSX.Ele
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-slate-50 border-t-4 border-slate-900 shadow-[0_-4px_0_0_#171717]">
+    <footer className="bg-slate-50 border-t-4 border-slate-300 shadow-[0_-4px_0_0_#d1d5db]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
@@ -265,7 +265,7 @@ export function SectionHeader({
     >
       <h2 className="text-3xl font-black text-slate-900 mb-3 uppercase tracking-tight inline-block relative">
         {title}
-        <span className="absolute bottom-[-6px] left-0 w-[60px] h-[4px] bg-emerald-600 shadow-[2px_2px_0_0_#171717]"></span>
+        <span className="absolute bottom-[-6px] left-0 w-[60px] h-[4px] bg-emerald-600 shadow-[2px_2px_0_0_#d1d5db]"></span>
       </h2>
       {subtitle != null && subtitle !== '' && (
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">{subtitle}</p>
@@ -284,7 +284,7 @@ export function StatsSection({ stats }: StatsSectionProps): React.JSX.Element {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat) => (
-            <div key={stat.label} className="text-center p-4 border-[3px] border-slate-900 shadow-[4px_4px_0_0_#171717] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#171717] transition-all">
+            <div key={stat.label} className="text-center p-4 border-[3px] border-slate-300 shadow-[4px_4px_0_0_#d1d5db] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#d1d5db] transition-all">
               <div className="text-4xl text-emerald-600 mb-2">{stat.value}</div>
               <div className="text-sm font-medium text-slate-600 uppercase tracking-wide">
                 {stat.icon != null && <span aria-hidden="true">{stat.icon} </span>}

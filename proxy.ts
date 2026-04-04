@@ -47,7 +47,8 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    const role = user.user_metadata?.role;
+    // app_metadata is server-controlled and not user-editable (unlike user_metadata)
+    const role = user.app_metadata?.role;
     if (role !== 'admin') {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = LOGIN_PATH;
