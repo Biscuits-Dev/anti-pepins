@@ -40,27 +40,65 @@ export interface Database {
           updated_at?: string;
         };
       };
-      temoignage: {
+      temoignages: {
         Row: {
           id: string;
-          name: string;
-          message: string;
+          prenom: string;
+          age: number;
+          scam_type: 'phishing' | 'romance' | 'fake-shop' | 'investment' | 'tech-support' | 'sms-livraison' | 'lottery' | 'fake-job' | 'identity' | 'harassment' | 'autre';
+          incident_date: string;
+          content: string;
+          ip_address: string;
+          user_agent: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
-          name: string;
-          message: string;
+          prenom: string;
+          age: number;
+          scam_type: 'phishing' | 'romance' | 'fake-shop' | 'investment' | 'tech-support' | 'sms-livraison' | 'lottery' | 'fake-job' | 'identity' | 'harassment' | 'autre';
+          incident_date: string;
+          content: string;
+          ip_address: string;
+          user_agent?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
-          name?: string;
-          message?: string;
+          prenom?: string;
+          age?: number;
+          scam_type?: 'phishing' | 'romance' | 'fake-shop' | 'investment' | 'tech-support' | 'sms-livraison' | 'lottery' | 'fake-job' | 'identity' | 'harassment' | 'autre';
+          incident_date?: string;
+          content?: string;
+          ip_address?: string;
+          user_agent?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+      chat_messages: {
+        Row: {
+          id: string;
+          session_id: string;
+          text: string;
+          sender: 'user' | 'admin';
+          timestamp: string;
+        };
+        Insert: {
+          id: string;
+          session_id: string;
+          text: string;
+          sender: 'user' | 'admin';
+          timestamp: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          text?: string;
+          sender?: 'user' | 'admin';
+          timestamp?: string;
         };
       };
     };

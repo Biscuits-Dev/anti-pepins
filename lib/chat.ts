@@ -6,13 +6,13 @@ import {
   PRESENCE_STATUS,
   isChatMessage,
   isTypingPayload,
-  isPresencePayload,
   type ChatMessage,
   type SenderRole,
 } from '@/types/chat';
 
 const CHANNEL_PREFIX = 'chat:session:';
 const ADMIN_CHANNEL = 'chat:admin';
+const ADMIN_PRESENCE_CHANNEL = 'chat:admin-presence';
 
 
 function sessionChannelName(sessionId: string): string {
@@ -37,6 +37,10 @@ export function createAdminChannel(): RealtimeChannel {
   return supabase.channel(ADMIN_CHANNEL, {
     config: { broadcast: { self: false } },
   });
+}
+
+export function createAdminPresenceChannel(): RealtimeChannel {
+  return supabase.channel(ADMIN_PRESENCE_CHANNEL);
 }
 
 async function forwardToAdminChannel(
@@ -128,7 +132,6 @@ export async function broadcastPresence(
 export interface ChatChannelCallbacks {
   onMessage?: (message: ChatMessage) => void;
   onTyping?: (sessionId: string, sender: SenderRole, isTyping: boolean) => void;
-  onAdminPresence?: (isOnline: boolean) => void;
 }
 
 export function attachChatListeners(
@@ -146,14 +149,7 @@ export function attachChatListeners(
         callbacks.onTyping(payload.sessionId, payload.sender, payload.isTyping);
       }
     })
-    .on('broadcast', { event: BROADCAST_EVENT.PRESENCE }, ({ payload }: { payload: unknown }) => {
-      if (isPresencePayload(payload) && callbacks.onAdminPresence) {
-        const isOnline = payload.status === PRESENCE_STATUS.ONLINE;
-        if (payload.sender === SENDER_ROLE.ADMIN) {
-          callbacks.onAdminPresence(isOnline);
-        }
-      }
-    });
+    ;
 }
 
 const SESSION_STORAGE_KEY = 'chat_session_id';
@@ -161,16 +157,16 @@ const SESSION_STORAGE_KEY = 'chat_session_id';
 export function getOrCreateSessionId(): string {
   if (globalThis.window === undefined) return generateId();
 
-  const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
+  const stored = localStorage.getItem(SESSION_STORAGE_KEY);
   if (stored) return stored;
 
   const newId = generateId();
-  sessionStorage.setItem(SESSION_STORAGE_KEY, newId);
+  localStorage.setItem(SESSION_STORAGE_KEY, newId);
   return newId;
 }
 
 export function clearSessionId(): void {
   if (globalThis.window !== undefined) {
-    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    localStorage.removeItem(SESSION_STORAGE_KEY);
   }
 }

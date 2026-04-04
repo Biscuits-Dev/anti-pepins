@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { checkRateLimit, getClientIp } from '@/lib/ratelimit';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 const SCAM_TYPES = [
   'phishing', 'romance', 'fake-shop', 'investment',
@@ -23,13 +24,13 @@ const TemoignageSchema = z.object({
     .transform(sanitizeString)
     .refine((v) => v.length >= 1, 'Le prénom ne peut pas être vide après nettoyage'),
 
-age: z
-  .number()
-  .int('L\'âge doit être un entier')
-  .min(10, 'L\'âge minimum est 10 ans')
-  .max(120, 'L\'âge maximum est 120 ans'),
+  age: z
+    .number()
+    .int('L\'âge doit être un entier')
+    .min(10, 'L\'âge minimum est 10 ans')
+    .max(120, 'L\'âge maximum est 120 ans'),
 
-scamType: z.enum(SCAM_TYPES),
+  scamType: z.enum(SCAM_TYPES),
 
   incidentDate: z
     .string()
@@ -51,56 +52,6 @@ scamType: z.enum(SCAM_TYPES),
 
 type TemoignageInput = z.infer<typeof TemoignageSchema>;
 
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
-}
-
-const rateLimitMap = new Map<string, RateLimitEntry>();
-const RATE_LIMIT_MAX = 3;
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; 
-
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of rateLimitMap.entries()) {
-    if (now > entry.resetAt) rateLimitMap.delete(key);
-  }
-}, 10 * 60 * 1000);
-
-function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return { allowed: true };
-  }
-
-  if (entry.count >= RATE_LIMIT_MAX) {
-    return { allowed: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) };
-  }
-
-  entry.count++;
-  return { allowed: true };
-}
-
-function getSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url?.trim() || !key?.trim()) {
-    throw new Error('Variables d\'environnement Supabase manquantes');
-  }
-
-  return createClient(url, key, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
-    },
-  });
-}
-
 function errorResponse(message: string, status: number, extra?: Record<string, unknown>) {
   return NextResponse.json({ error: message, ...extra }, { status });
 }
@@ -116,13 +67,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return errorResponse('Payload trop volumineux.', 413);
   }
 
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  const { allowed, retryAfter } = checkRateLimit(ip);
-  if (!allowed) {
+  // Rate limiting distribué via Upstash (3 soumissions par heure par IP)
+  const ip = getClientIp(request);
+  const rl = await checkRateLimit(`temoignage:${ip}`, { max: 3, windowMs: 60 * 60 * 1000 });
+  if (!rl.allowed) {
     return errorResponse(
       'Trop de soumissions. Veuillez réessayer plus tard.',
       429,
-      { retryAfter }
+      { retryAfter: Math.ceil((rl.resetAt - Date.now()) / 1000) }
     );
   }
 
@@ -142,15 +94,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const data: TemoignageInput = parsed.data;
 
-  let supabase: ReturnType<typeof getSupabaseClient>;
-  try {
-    supabase = getSupabaseClient();
-  } catch (err) {
-    console.error('[temoignage] config Supabase manquante:', err);
-    return errorResponse('Erreur de configuration serveur.', 500);
-  }
+  const supabase = createServerSupabaseClient();
 
-  const { error: dbError } = await supabase.from('temoignages').insert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: dbError } = await (supabase as any).from('temoignages').insert({
     prenom:        data.prenom,
     age:           data.age,
     scam_type:     data.scamType,

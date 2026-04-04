@@ -1,7 +1,6 @@
-// app/api/report/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { isRawReportInput, validateReportInput } from '@/lib/validation/report';
+import { isChatMessage, SENDER_ROLE } from '@/types/chat';
 import { checkRateLimit, getClientIp } from '@/lib/ratelimit';
 
 const HEADERS = {
@@ -14,66 +13,68 @@ function json(body: object, status: number, extra?: Record<string, string>) {
   return NextResponse.json(body, { status, headers: { ...HEADERS, ...extra } });
 }
 
+const MESSAGE_MAX_LEN = 2_000;
+const ID_RE = /^[\w-]{1,100}$/;
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const ip = getClientIp(request);
-  const rl = await checkRateLimit(`report:${ip}`, { max: 5, windowMs: 60_000 });
+  const rl = await checkRateLimit(`chat:${ip}`, { max: 30, windowMs: 60_000 });
   if (!rl.allowed) {
     return json(
-      { error: 'Trop de requêtes. Veuillez patienter avant de réessayer.' },
+      { error: 'Trop de requêtes.' },
       429,
       { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) },
     );
   }
 
   if (!request.headers.get('content-type')?.includes('application/json')) {
-    return json({ error: 'Content-Type invalide. Attendu : application/json' }, 415);
+    return json({ error: 'Content-Type invalide.' }, 415);
   }
 
   let rawBody: unknown;
   try {
     rawBody = await request.json();
   } catch {
-    return json({ error: 'Corps de la requête invalide ou malformé.' }, 400);
+    return json({ error: 'Corps de la requête invalide.' }, 400);
   }
 
-  if (!isRawReportInput(rawBody)) {
+  if (!isChatMessage(rawBody)) {
     return json({ error: 'Structure de données invalide.' }, 400);
   }
 
-  const validation = validateReportInput(rawBody);
-  if (!validation.ok) {
-    return json({ error: 'Données invalides.', details: validation.errors }, 422);
+  // Réservé aux messages visiteurs anonymes
+  if (rawBody.sender !== SENDER_ROLE.USER) {
+    return json({ error: 'Non autorisé.' }, 403);
   }
 
-  const { data } = validation;
+  // Valider l'ID (format) et la longueur du texte
+  if (!ID_RE.test(rawBody.id)) {
+    return json({ error: 'ID invalide.' }, 400);
+  }
+  if (rawBody.text.trim().length === 0 || rawBody.text.length > MESSAGE_MAX_LEN) {
+    return json({ error: 'Message invalide.' }, 400);
+  }
 
   try {
     const supabase = createServerSupabaseClient();
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: dbError } = await (supabase as any)
-      .from('reports')
-      .insert({
-        scam_type:     data.scamType,
-        incident_date: data.incidentDate,
-        description:   data.description,
-        amount:        data.amount,
-        contact_email: data.contactEmail,
-        receive_copy:  data.receiveCopy,
-        need_help:     data.needHelp,
-        ip_address:    ip,
-        user_agent:    request.headers.get('user-agent') ?? null,
-      });
+    const { error: dbError } = await (supabase as any).from('chat_messages').insert({
+      id:         rawBody.id,
+      session_id: rawBody.sessionId,
+      text:       rawBody.text,
+      sender:     rawBody.sender,
+      timestamp:  new Date().toISOString(), // timestamp généré côté serveur
+    });
 
     if (dbError) {
-      console.error('[ReportAPI] Supabase error:', JSON.stringify(dbError));
-      return json({ error: "Erreur lors de l'enregistrement. Veuillez réessayer." }, 500);
+      console.error('[ChatMessageAPI] Supabase error:', JSON.stringify(dbError));
+      return json({ error: 'Erreur lors de la sauvegarde.' }, 500);
     }
 
-    return json({ success: true, message: 'Votre signalement a bien été envoyé.' }, 201);
+    return json({ ok: true }, 201);
   } catch (err) {
-    console.error('[ReportAPI] Unexpected error:', err);
-    return json({ error: 'Erreur interne. Veuillez réessayer ultérieurement.' }, 500);
+    console.error('[ChatMessageAPI] Unexpected error:', err);
+    return json({ error: 'Erreur interne.' }, 500);
   }
 }
 

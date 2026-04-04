@@ -79,69 +79,87 @@ export function ChatWidget(): React.JSX.Element {
 
               {/* Messages */}
               <div className="flex-1 p-4 overflow-y-auto space-y-3">
-                {messages.length === 0 ? (
-                  <div className="text-center text-slate-400 text-sm py-8">
-                    <p>Envoyez un message pour démarrer la conversation ! Un bénévole vas vous répondre dans les meilleurs délais.</p>
+                {!isAdminOnline && messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-6">
+                    <span className="text-3xl">😴</span>
+                    <p className="text-slate-700 text-sm font-medium">Aucun bénévole disponible</p>
+                    <p className="text-slate-400 text-xs leading-relaxed">
+                      Tous nos bénévoles sont absents pour le moment.<br />
+                      Revenez plus tard, nous ferons de notre mieux pour vous répondre rapidement.
+                    </p>
                   </div>
                 ) : (
-                  messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.sender === 'admin' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
-                        msg.sender === 'admin'
-                          ? 'bg-emerald-100 text-emerald-900 rounded-br-sm'
-                          : 'bg-slate-100 text-slate-900 rounded-bl-sm'
-                      }`}>
-                        <p>{msg.text}</p>
-                        <p className={`text-xs mt-1 ${
-                          msg.sender === 'admin' ? 'text-emerald-600' : 'text-slate-400'
+                  <>
+                    {!isAdminOnline && messages.length > 0 && (
+                      <div className="text-center text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                        Aucun bénévole connecté pour le moment — revenez plus tard.
+                      </div>
+                    )}
+                    {messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`flex ${msg.sender === 'admin' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
+                          msg.sender === 'admin'
+                            ? 'bg-emerald-100 text-emerald-900 rounded-br-sm'
+                            : 'bg-slate-100 text-slate-900 rounded-bl-sm'
                         }`}>
-                          {new Date(msg.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                          <p>{msg.text}</p>
+                          <p className={`text-xs mt-1 ${
+                            msg.sender === 'admin' ? 'text-emerald-600' : 'text-slate-400'
+                          }`}>
+                            {new Date(msg.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))
-                )}
-                {isAdminTyping && (
-                  <div className="flex justify-start">
-                    <div className="bg-slate-100 px-3 py-2 rounded-lg rounded-bl-sm">
-                      <div className="flex gap-1 items-center">
-                        {[0, 150, 300].map(delay => (
-                          <span
-                            key={delay}
-                            className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"
-                            style={{ animationDelay: `${delay}ms` }}
-                          />
-                        ))}
+                    ))}
+                    {isAdminTyping && (
+                      <div className="flex justify-start">
+                        <div className="bg-slate-100 px-3 py-2 rounded-lg rounded-bl-sm">
+                          <div className="flex gap-1 items-center">
+                            {[0, 150, 300].map(delay => (
+                              <span
+                                key={delay}
+                                className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"
+                                style={{ animationDelay: `${delay}ms` }}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    )}
+                  </>
                 )}
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Input */}
-              <form onSubmit={handleSubmit} className="border-t border-slate-100 p-3">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={handleInputChange}
-                    placeholder="Votre message..."
-                    className="flex-1 px-3 py-2 border text-gray-900 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-                    disabled={!isConnected}
-                  />
-                  <button
-                    type="submit"
-                    disabled={!message.trim() || !isConnected}
-                    className="px-4 pl-2 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Envoyer
-                  </button>
+              {isAdminOnline ? (
+                <form onSubmit={handleSubmit} className="border-t border-slate-100 p-3">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={message}
+                      onChange={handleInputChange}
+                      placeholder="Votre message..."
+                      className="flex-1 px-3 py-2 border text-gray-900 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                      disabled={!isConnected}
+                    />
+                    <button
+                      type="submit"
+                      disabled={!message.trim() || !isConnected}
+                      className="px-4 pl-2 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Envoyer
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="border-t border-slate-100 px-4 py-3 text-center text-xs text-slate-400">
+                  Le formulaire sera disponible quand un bénévole sera connecté.
                 </div>
-              </form>
+              )}
             </div>
           </motion.div>
         )}

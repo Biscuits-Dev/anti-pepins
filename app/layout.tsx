@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Toaster, type ToasterProps } from "react-hot-toast";
 import { Analytics } from "@vercel/analytics/next";
 import CookieBanner from "@/components/CookieBanner";
@@ -48,6 +49,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <CookieBanner />
+        <SpeedInsights />
         <Analytics />
         <Toaster
           position="top-right"

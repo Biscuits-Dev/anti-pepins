@@ -28,6 +28,8 @@ import {
   SanitizationError,
 } from "@/lib/analyzer";
 import type { AnalyzableType, AnalysisContextFields, AnalysisResult } from "@/lib/analyzer";
+import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
+import { isAdminRequest } from "@/lib/supabase/auth";
 
 type PostAction = "analyze" | "report" | "manage-list" | "import";
 
@@ -64,6 +66,13 @@ interface ImportBody {
 type PostBody = AnalyzeBody | ReportBody | ManageListBody | ImportBody;
 
 const VALID_TYPES: AnalyzableType[] = ["url", "email", "message", "phone", "text"];
+const MAX_ANALYZED_LINKS = 10;
+
+// Actions POST réservées aux admins
+const ADMIN_POST_ACTIONS = new Set<PostAction>(["manage-list", "import"]);
+
+// Actions GET réservées aux admins
+const ADMIN_GET_ACTIONS = new Set(["history", "reported", "blacklist", "whitelist", "export"]);
 
 function ok<T>(data: T, extra?: Record<string, unknown>) {
   return NextResponse.json({ success: true, data, ...extra });
@@ -111,7 +120,6 @@ function mergeWithSuspiciousLinks(
   const maxLinkScore = Math.max(...suspiciousLinks.map((r) => r.score), 0);
   const adjustedScore = Math.max(result.score, maxLinkScore);
 
-  // On remonte TOUS les liens analysés (pas seulement les suspects) pour la transparence UI
   const linksToDisplay = allLinkResults ?? suspiciousLinks;
 
   return {
@@ -170,10 +178,11 @@ async function handleAnalyze(body: AnalyzeBody) {
     : [];
 
   const explicitSet = new Set(explicitLinks);
+  // Limité à MAX_ANALYZED_LINKS pour éviter le DoS par masse d'URLs
   const allLinks = [
     ...explicitLinks,
     ...contextLinks.filter(l => !explicitSet.has(l)),
-  ];
+  ].slice(0, MAX_ANALYZED_LINKS);
 
   if (allLinks.length === 0) {
     return ok(result, { quick: false, aiConfigured: isAIConfigured() });
@@ -264,10 +273,24 @@ const POST_HANDLERS: Record<PostAction, (body: PostBody) => PostHandlerResult> =
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const rl = await checkRateLimit(`analyze:${ip}`, { max: 20, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Trop de requêtes." }, { status: 429 });
+    }
+
     const body = (await request.json()) as PostBody;
     const action: PostAction = (body as AnalyzeBody).action ?? "analyze";
     const handler = POST_HANDLERS[action];
     if (!handler) return err(`Action non supportée : ${action}`);
+
+    // Actions réservées aux admins
+    if (ADMIN_POST_ACTIONS.has(action)) {
+      if (!await isAdminRequest()) {
+        return err("Non autorisé.", 401);
+      }
+    }
+
     return await handler(body);
   } catch (error) {
     console.error("Erreur API POST /analyze:", error);
@@ -300,11 +323,25 @@ const GET_HANDLERS: Record<GetAction, (params: URLSearchParams) => NextResponse>
 
 export async function GET(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const rl = await checkRateLimit(`analyze:${ip}`, { max: 20, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Trop de requêtes." }, { status: 429 });
+    }
+
     const params = new URL(request.url).searchParams;
     const action = (params.get("action") ?? "stats") as GetAction;
     const handler = GET_HANDLERS[action];
     if (!handler) return err(`Action non supportée : ${action}`);
-    return handler(params); // Pas de await — les handlers GET sont tous synchrones
+
+    // Actions réservées aux admins
+    if (ADMIN_GET_ACTIONS.has(action)) {
+      if (!await isAdminRequest()) {
+        return err("Non autorisé.", 401);
+      }
+    }
+
+    return handler(params);
   } catch (error) {
     console.error("Erreur API GET /analyze:", error);
     return err("Erreur interne du serveur", 500);

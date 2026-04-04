@@ -52,7 +52,7 @@ function json(body: object, status: number, extra?: Record<string, string>) {
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const ip = getClientIp(request);
-  const rl = checkRateLimit(`contact:${ip}`, { max: 5, windowMs: 60_000 });
+  const rl = await checkRateLimit(`contact:${ip}`, { max: 5, windowMs: 60_000 });
   if (!rl.allowed) {
     return json(
       { error: 'Trop de requêtes. Veuillez patienter avant de réessayer.' },

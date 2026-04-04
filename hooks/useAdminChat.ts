@@ -11,11 +11,11 @@ import {
 } from '@/types/chat';
 import {
   createAdminChannel,
+  createAdminPresenceChannel,
   createSessionChannel,
   attachChatListeners,
   broadcastMessage,
   broadcastTyping,
-  broadcastPresence,
 } from '@/lib/chat';
 
 const TYPING_STOP_DELAY_MS = 2_500;
@@ -50,7 +50,6 @@ async function fetchAllMessages(): Promise<Map<string, AdminChatSession>> {
     };
 
     const existing = map.get(row.session_id);
-    // ✅ On reconstruit un nouvel objet au lieu de muter
     map.set(row.session_id, {
       sessionId: row.session_id,
       messages: existing ? [...existing.messages, msg] : [msg],
@@ -148,7 +147,6 @@ export function useAdminChat(): UseAdminChatReturn {
     });
   }, [ensureReplyChannel]);
 
-  // Écoute temps réel
   useEffect(() => {
     const adminChannel = createAdminChannel();
 
@@ -156,7 +154,7 @@ export function useAdminChat(): UseAdminChatReturn {
       onMessage(message) {
         if (message.sender === SENDER_ROLE.USER) {
           ensureReplyChannel(message.sessionId);
-          persistMessage(message).catch(console.error);
+          // La persistance des messages user est gérée par /api/chat/message (service_role)
           upsertSession(message.sessionId, prev => ({
             ...prev,
             messages: [...prev.messages, message],
@@ -174,18 +172,24 @@ export function useAdminChat(): UseAdminChatReturn {
 
     adminChannel.subscribe(status => {
       setIsConnected(status === 'SUBSCRIBED');
-      if (status === 'SUBSCRIBED') {
-        broadcastPresence(adminChannel, SENDER_ROLE.ADMIN, PRESENCE_STATUS.ONLINE).catch(console.error);
-      }
     });
 
     adminChannelRef.current = adminChannel;
+
+    // Présence admin via Supabase Presence (state maintenu côté serveur)
+    const presenceChannel = createAdminPresenceChannel();
+    presenceChannel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await presenceChannel.track({ sender: SENDER_ROLE.ADMIN, status: PRESENCE_STATUS.ONLINE });
+      }
+    });
 
     const typingTimeouts = typingTimeoutsRef.current;
     const replyChannels = replyChannelsRef.current;
 
     return () => {
-      broadcastPresence(adminChannel, SENDER_ROLE.ADMIN, PRESENCE_STATUS.OFFLINE).catch(console.error);
+      presenceChannel.untrack().catch(console.error);
+      presenceChannel.unsubscribe().catch(console.error);
       typingTimeouts.forEach(clearTimeout);
       replyChannels.forEach(ch => { ch.unsubscribe().catch(console.error); });
       adminChannel.unsubscribe().catch(console.error);
